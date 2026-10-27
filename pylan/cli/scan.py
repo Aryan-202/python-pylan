@@ -14,6 +14,7 @@ import click
 
 from pylan.core.discovery import DiscoveryEngine
 from pylan.core.models import StatefulDevice
+from pylan.core.net import get_active_interface_details
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +30,8 @@ def get_local_interfaces() -> list[str]:
         A list containing the local IPv4 address string, or ['127.0.0.1']
         if network interfaces cannot be probed.
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        sock.connect(("8.8.8.8", 80))
-        return [sock.getsockname()[0]]
-    except OSError:
-        return ["127.0.0.1"]
-    finally:
-        sock.close()
+    ip, _ = get_active_interface_details()
+    return [ip]
 
 
 async def execute_discovery(timeout: float) -> list[StatefulDevice]:

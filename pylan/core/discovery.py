@@ -26,6 +26,7 @@ from pylan.core.models import (
     StatefulDevice,
 )
 from pylan.core.protocol import HEADER_SIZE, pack_message, unpack_header
+from pylan.core.net import get_active_interface_details, get_arp_neighbors
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,8 @@ SCAN_CONCURRENCY = 50
 MSG_TYPE_ANNOUNCE = 10
 MSG_TYPE_PROBE_REQUEST = 11
 MSG_TYPE_PROBE_RESPONSE = 12
+
+MAX_SEQUENTIAL_SWEEP_HOSTS = 512
 
 
 class DiscoveryProtocol(asyncio.DatagramProtocol):
@@ -334,7 +337,10 @@ class DiscoveryEngine:
             await writer.wait_closed()
 
     async def scan_subnet(
-        self, interface_ip: str, port: Optional[int] = None
+        self,
+        interface_ip: str,
+        port: Optional[int] = None,
+        netmask: Optional[str] = None,
     ) -> list[StatefulDevice]:
         """Perform a concurrent probe sweep across an entire /24 IPv4 subnet.
 
@@ -364,6 +370,45 @@ class DiscoveryEngine:
         if interface_ip in self._active_subnet_scans:
             return []
 
+        if not netmask:
+            detected_ip, detected_mask = get_active_interface_details()
+            netmask = (
+                detected_mask
+                if detected_ip == interface_ip
+                else "255.255.255.0"
+            )
+
+        try:
+            interface = ipaddress.ip_interface(f"{interface_ip}/{netmask}")
+            network = interface.network
+        except ValueError:
+            network = ipaddress.ip_network(f"{interface_ip}/24", strict=False)
+
+        arp_entries = get_arp_neighbors()
+        target_ips = {
+            ip_str for ip_str in arp_entries
+            if ipaddress.ip_address(ip_str) in network
+            and ip_str != interface_ip
+        }
+
+        total_hosts = network.num_addresses - 2
+        if total_hosts <= MAX_SEQUENTIAL_SWEEP_HOSTS:
+            for host in network.hosts():
+                ip_str = str(host)
+                if ip_str != interface_ip:
+                    target_ips.add(ip_str)
+        else:
+            slice_mask = "255.255.254.0"
+            try:
+                local_slice = ipaddress.ip_interface(
+                    f"{interface_ip}/{slice_mask}"
+                ).network
+                for host in local_slice.hosts():
+                    ip_str = str(host)
+                    if ip_str != interface_ip and host in network:
+                        target_ips.add(ip_str)
+            except ValueError:
+                pass
         self._active_subnet_scans.add(interface_ip)
         semaphore = asyncio.Semaphore(SCAN_CONCURRENCY)
 
