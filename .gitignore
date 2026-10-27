@@ -78,3 +78,7 @@ site/
 ._*
 Thumbs.db
 Desktop.ini
+
+# Flet
+.flet/
+.flet

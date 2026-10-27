@@ -22,6 +22,7 @@ dependencies = [
     "bleak>=3.0.2",
     "certifi>=2026.10.23",
     "click>=8.5.0",
+    "flet>=1.0.5",
     "psutil>=7.2.2",
     "pytest>=9.1.1",
     "qrcode>=8.2",
@@ -49,6 +50,10 @@ check_untyped_defs = true
 [dependency-groups]
 dev = [
     "flake8>=7.4.1",
+    "flet-cli>=1.0.5",
+    "flet-desktop>=1.0.5",
+    "flet-web>=1.0.5",
+    "flet[test]>=1.0.5",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
 ]
