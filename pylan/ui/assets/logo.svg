@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="400" height="100">
+  <defs>
+    <linearGradient id="pylan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00E5FF" />
+      <stop offset="50%" stop-color="#2979FF" />
+      <stop offset="100%" stop-color="#7C4DFF" />
+    </linearGradient>
+    <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#2979FF" stop-opacity="0.2" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Node Icon Group -->
+  <g transform="translate(15, 10)">
+    <!-- Interconnecting Data Paths -->
+    <path d="M 40 25 L 65 55" stroke="url(#pylan-grad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 6" opacity="0.8" />
+    <path d="M 40 25 L 15 55" stroke="url(#pylan-grad)" stroke-width="4" stroke-linecap="round" />
+    <path d="M 15 55 L 65 55" stroke="url(#pylan-grad)" stroke-width="4" stroke-linecap="round" />
+    <path d="M 40 55 L 40 30" stroke="#00E5FF" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Top Node -->
+    <circle cx="40" cy="22" r="14" fill="#0D1117" stroke="url(#pylan-grad)" stroke-width="4" filter="url(#glow)" />
+    <circle cx="40" cy="22" r="6" fill="#00E5FF" />
+
+    <!-- Left Bottom Node -->
+    <circle cx="15" cy="58" r="12" fill="#0D1117" stroke="#2979FF" stroke-width="3.5" />
+    <circle cx="15" cy="58" r="5" fill="#2979FF" />
+
+    <!-- Right Bottom Node -->
+    <circle cx="65" cy="58" r="12" fill="#0D1117" stroke="#7C4DFF" stroke-width="3.5" />
+    <circle cx="65" cy="58" r="5" fill="#7C4DFF" />
+
+    <!-- Pulse Ring -->
+    <circle cx="40" cy="22" r="19" fill="none" stroke="#00E5FF" stroke-width="1.5" opacity="0.4" stroke-dasharray="4 4" />
+  </g>
+
+  <!-- Typography -->
+  <g transform="translate(110, 62)">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="44" font-weight="800" fill="#FFFFFF" letter-spacing="0.5">
+      Py<tspan fill="url(#pylan-grad)">Lan</tspan>
+    </text>
+    <text x="145" y="-2" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00E5FF" letter-spacing="1.5" text-transform="uppercase">
+      LAN SHARE
+    </text>
+  </g>
+</svg>

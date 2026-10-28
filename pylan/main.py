@@ -1,9 +1,6 @@
-from pylan.cli.cli import cli
+"""Direct console script entrypoint for PyLan."""
 
-
-def main() -> None:
-    cli()
-
+from pylan.__main__ import main
 
 if __name__ == "__main__":
     main()

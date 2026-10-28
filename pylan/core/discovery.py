@@ -207,7 +207,7 @@ class DiscoveryEngine:
             )
             return transport
         except Exception as e:
-            logger.warning(
+            logger.info(
                 "Could not bind multicast socket (%s). "
                 "Continuing in fallback mode.",
                 e,
