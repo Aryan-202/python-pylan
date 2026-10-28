@@ -108,6 +108,8 @@ def create_peer_tile(
                                     size=15,
                                     weight=ft.FontWeight.BOLD,
                                     color=ft.Colors.ON_SURFACE,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                    max_lines=1,
                                 ),
                                 ft.Container(
                                     content=ft.Text(
@@ -129,6 +131,8 @@ def create_peer_tile(
                             f"{model}  •  {address}",
                             size=12,
                             color=ft.Colors.ON_SURFACE_VARIANT,
+                            overflow=ft.TextOverflow.ELLIPSIS,
+                            max_lines=1,
                         ),
                     ],
                     spacing=2,

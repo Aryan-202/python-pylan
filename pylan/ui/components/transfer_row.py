@@ -200,6 +200,8 @@ def create_transfer_row(
                                     f"{direction_label} {item.peer_alias}",
                                     size=12,
                                     color=ft.Colors.ON_SURFACE_VARIANT,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                    max_lines=1,
                                 ),
                             ],
                             spacing=2,

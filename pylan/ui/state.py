@@ -25,7 +25,11 @@ from pylan.core.discovery import (
     MSG_TYPE_PROBE_REQUEST,
     MSG_TYPE_PROBE_RESPONSE,
 )
-from pylan.core.models import StatefulDevice
+from pylan.core.models import (
+    HttpChannel,
+    ProtocolType,
+    StatefulDevice,
+)
 from pylan.core.net import (
     get_active_interface_details,
     get_default_interface_ip,
@@ -371,17 +375,45 @@ class AppState:
         except Exception as exc:
             logger.debug("Failed initializing multicast listener: %s", exc)
 
-        try:
-            self._server = await asyncio.start_server(
-                self._handle_client_connection,
-                host="0.0.0.0",
-                port=self.settings.tcp_port,
-            )
+        target_port = self.settings.tcp_port
+        candidate_ports = [target_port] + [
+            target_port + offset for offset in range(1, 10)
+        ]
+        bound_port: Optional[int] = None
+
+        for port in candidate_ports:
+            try:
+                self._server = await asyncio.start_server(
+                    self._handle_client_connection,
+                    host="0.0.0.0",
+                    port=port,
+                )
+                bound_port = port
+                break
+            except OSError as exc:
+                logger.debug(
+                    "Port %d unavailable (%s), checking next...", port, exc
+                )
+                continue
+
+        if bound_port is not None:
+            if bound_port != target_port:
+                logger.info(
+                    "Port %d busy; successfully bound fallback port %d",
+                    target_port,
+                    bound_port,
+                )
+                with self._lock:
+                    self.settings.tcp_port = bound_port
+                if self.engine is not None:
+                    self.engine.tcp_port = bound_port
             with self._lock:
                 self.is_receiver_running = True
-        except Exception as exc:
-            logger.error("Failed binding TCP server on port %d: %s",
-                         self.settings.tcp_port, exc)
+        else:
+            logger.error(
+                "Failed binding TCP server on port %d and fallback ports",
+                target_port,
+            )
             with self._lock:
                 self.is_receiver_running = False
 
@@ -448,8 +480,30 @@ class AppState:
                 tcp_port=self.settings.tcp_port,
                 device_model=self.settings.device_model,
             )
+            known_channels: list[HttpChannel] = []
+            for test_port in [44000, 44001, 44002]:
+                if test_port != self.settings.tcp_port:
+                    known_channels.append(
+                        HttpChannel(
+                            host="127.0.0.1",
+                            port=test_port,
+                            protocol=ProtocolType.TCP,
+                        )
+                    )
+                    if self.active_interface_ip not in (
+                        "127.0.0.1",
+                        "0.0.0.0",
+                    ):
+                        known_channels.append(
+                            HttpChannel(
+                                host=self.active_interface_ip,
+                                port=test_port,
+                                protocol=ProtocolType.TCP,
+                            )
+                        )
             devices = await engine.discover_staged(
                 interface_ips=[self.active_interface_ip],
+                known_channels=known_channels,
                 grace_period=self.settings.discovery_timeout,
             )
             with self._lock:

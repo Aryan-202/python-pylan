@@ -13,6 +13,7 @@ def create_top_bar(
     on_settings_click: Optional[Callable[[], None]] = None,
     on_back_click: Optional[Callable[[], None]] = None,
     title: Optional[str] = None,
+    page_width: Optional[float] = None,
 ) -> ft.Container:
     """Create a styled top application header bar.
 
@@ -22,12 +23,14 @@ def create_top_bar(
         on_settings_click: Callback fired when clicking the settings icon.
         on_back_click: Optional callback for returning to the home screen.
         title: Optional custom header title string.
+        page_width: Optional current viewport width for responsive sizing.
 
     Returns:
         A Flet Container styled as an application header bar.
     """
     settings = state.settings
     alias = settings.device_alias
+    is_compact = page_width is not None and page_width < 500
 
     status_color = (
         ft.Colors.GREEN_ACCENT_400
@@ -69,12 +72,14 @@ def create_top_bar(
                 ),
                 ft.Text(
                     title or "pylan",
-                    size=18,
+                    size=16 if is_compact else 18,
                     weight=ft.FontWeight.W_700,
                     color=ft.Colors.ON_SURFACE,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    max_lines=1,
                 ),
             ],
-            spacing=4,
+            spacing=2 if is_compact else 4,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
     else:
@@ -82,38 +87,90 @@ def create_top_bar(
             controls=[
                 ft.Image(
                     src="icon.png",
-                    width=26,
-                    height=26,
+                    width=24 if is_compact else 26,
+                    height=24 if is_compact else 26,
                     fit=ft.BoxFit.CONTAIN,
                     error_content=ft.Icon(
                         ft.Icons.SHARE_ROUNDED,
-                        size=26,
+                        size=24 if is_compact else 26,
                         color=ft.Colors.PRIMARY,
                     ),
                 ),
                 ft.Text(
                     "pylan",
-                    size=20,
+                    size=18 if is_compact else 20,
                     weight=ft.FontWeight.W_800,
                     color=ft.Colors.ON_SURFACE,
                 ),
-                ft.Container(
-                    content=ft.Text(
-                        "v0.0.2",
-                        size=10,
-                        weight=ft.FontWeight.BOLD,
-                        color=ft.Colors.PRIMARY,
-                    ),
-                    padding=ft.Padding.symmetric(
-                        horizontal=6, vertical=2
-                    ),
-                    border_radius=6,
-                    bgcolor=ft.Colors.PRIMARY_CONTAINER,
-                ),
             ],
-            spacing=8,
+            spacing=6 if is_compact else 8,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
+
+    # Responsive status indicator
+    if page_width is not None and page_width < 380:
+        status_pill_content = ft.Row(
+            controls=[
+                ft.Icon(
+                    ft.Icons.CIRCLE,
+                    size=8,
+                    color=status_color,
+                ),
+            ],
+            spacing=0,
+            tight=True,
+        )
+        status_padding = ft.Padding.all(8)
+    elif is_compact:
+        status_pill_content = ft.Row(
+            controls=[
+                ft.Icon(
+                    ft.Icons.CIRCLE,
+                    size=8,
+                    color=status_color,
+                ),
+                ft.Text(
+                    status_text,
+                    size=11,
+                    weight=ft.FontWeight.W_500,
+                    color=ft.Colors.ON_SURFACE,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    max_lines=1,
+                ),
+            ],
+            spacing=4,
+            tight=True,
+        )
+        status_padding = ft.Padding.symmetric(horizontal=8, vertical=4)
+    else:
+        status_pill_content = ft.Row(
+            controls=[
+                ft.Icon(
+                    ft.Icons.CIRCLE,
+                    size=8,
+                    color=status_color,
+                ),
+                ft.Text(
+                    f"{alias} • {status_text}",
+                    size=12,
+                    weight=ft.FontWeight.W_500,
+                    color=ft.Colors.ON_SURFACE,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    max_lines=1,
+                ),
+            ],
+            spacing=6,
+            tight=True,
+        )
+        status_padding = ft.Padding.symmetric(horizontal=12, vertical=6)
+
+    status_pill = ft.Container(
+        content=status_pill_content,
+        padding=status_padding,
+        border_radius=20,
+        bgcolor=ft.Colors.SURFACE_CONTAINER_HIGH,
+        tooltip=f"{alias} • {status_text}",
+    )
 
     return ft.Container(
         content=ft.Row(
@@ -121,40 +178,21 @@ def create_top_bar(
                 leading_area,
                 ft.Row(
                     controls=[
-                        ft.Container(
-                            content=ft.Row(
-                                controls=[
-                                    ft.Icon(
-                                        ft.Icons.CIRCLE,
-                                        size=8,
-                                        color=status_color,
-                                    ),
-                                    ft.Text(
-                                        f"{alias} • {status_text}",
-                                        size=12,
-                                        weight=ft.FontWeight.W_500,
-                                        color=ft.Colors.ON_SURFACE,
-                                    ),
-                                ],
-                                spacing=6,
-                            ),
-                            padding=ft.Padding.symmetric(
-                                horizontal=12, vertical=6
-                            ),
-                            border_radius=20,
-                            bgcolor=ft.Colors.SURFACE_CONTAINER_HIGH,
-                        ),
+                        status_pill,
                         scan_button,
                         settings_button,
                     ],
-                    spacing=8,
+                    spacing=4 if is_compact else 8,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),
-        padding=ft.Padding.symmetric(horizontal=16, vertical=10),
+        padding=ft.Padding.symmetric(
+            horizontal=12 if is_compact else 16,
+            vertical=8 if is_compact else 10,
+        ),
         bgcolor=ft.Colors.SURFACE_CONTAINER,
         border=ft.Border(
             bottom=ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT)

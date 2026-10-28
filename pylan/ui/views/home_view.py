@@ -15,6 +15,7 @@ def create_home_view(
     on_send_click: Optional[Callable[[], None]] = None,
     on_receive_click: Optional[Callable[[], None]] = None,
     on_quick_send: Optional[Callable[[StatefulDevice], None]] = None,
+    page_width: Optional[float] = None,
 ) -> ft.Control:
     """Construct the unified Home view.
 
@@ -23,10 +24,12 @@ def create_home_view(
         on_send_click: Callback to open the Send files workflow.
         on_receive_click: Callback to open the Receive files workflow.
         on_quick_send: Callback to send files directly to a clicked device.
+        page_width: Current viewport width for responsive layout adjustments.
 
     Returns:
         A Flet Control containing the complete home screen.
     """
+    is_mobile = page_width is not None and page_width < 500
 
     def handle_device_select(device: StatefulDevice) -> None:
         state.select_device(device)
@@ -92,7 +95,7 @@ def create_home_view(
                     alignment=ft.MainAxisAlignment.CENTER,
                     spacing=6,
                 ),
-                padding=36,
+                padding=22 if is_mobile else 36,
                 border_radius=12,
                 bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
                 alignment=ft.Alignment.CENTER,
@@ -173,23 +176,27 @@ def create_home_view(
         transfers_section = ft.Container(height=0)
 
     # Primary bottom actions: Send and Receive
+    btn_height = 48 if is_mobile else 52
+    icon_size = 20 if is_mobile else 22
+    text_size = 15 if is_mobile else 16
+
     bottom_actions = ft.Container(
         content=ft.Row(
             controls=[
                 ft.FilledButton(
                     content=ft.Row(
                         controls=[
-                            ft.Icon(ft.Icons.SEND_ROUNDED, size=22),
+                            ft.Icon(ft.Icons.SEND_ROUNDED, size=icon_size),
                             ft.Text(
                                 "Send",
-                                size=16,
+                                size=text_size,
                                 weight=ft.FontWeight.BOLD,
                             ),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=8,
+                        spacing=6 if is_mobile else 8,
                     ),
-                    height=52,
+                    height=btn_height,
                     expand=True,
                     on_click=lambda _: (
                         on_send_click() if on_send_click else None
@@ -198,26 +205,30 @@ def create_home_view(
                 ft.FilledTonalButton(
                     content=ft.Row(
                         controls=[
-                            ft.Icon(ft.Icons.DOWNLOAD_ROUNDED, size=22),
+                            ft.Icon(
+                                ft.Icons.DOWNLOAD_ROUNDED, size=icon_size
+                            ),
                             ft.Text(
                                 "Receive",
-                                size=16,
+                                size=text_size,
                                 weight=ft.FontWeight.BOLD,
                             ),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=8,
+                        spacing=6 if is_mobile else 8,
                     ),
-                    height=52,
+                    height=btn_height,
                     expand=True,
                     on_click=lambda _: (
                         on_receive_click() if on_receive_click else None
                     ),
                 ),
             ],
-            spacing=16,
+            spacing=10 if is_mobile else 16,
         ),
-        padding=ft.Padding.symmetric(vertical=8, horizontal=0),
+        padding=ft.Padding.symmetric(
+            vertical=6 if is_mobile else 8, horizontal=0
+        ),
     )
 
     return ft.ListView(
@@ -229,6 +240,6 @@ def create_home_view(
             bottom_actions,
         ],
         spacing=10,
-        padding=20,
+        padding=12 if is_mobile else 20,
         expand=True,
     )

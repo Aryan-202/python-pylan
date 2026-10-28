@@ -1,6 +1,7 @@
 """Flet desktop application entrypoint and main window setup for PyLan."""
 
 from pathlib import Path
+from typing import Any
 
 import flet as ft
 
@@ -22,6 +23,7 @@ def main(page: ft.Page) -> None:
     """
     page.title = "pylan"
     page.theme_mode = ft.ThemeMode.DARK
+    page.bgcolor = ft.Colors.SURFACE_CONTAINER
     page.padding = 0
 
     assets_dir = Path(__file__).parent / "assets"
@@ -77,6 +79,7 @@ def main(page: ft.Page) -> None:
 
     def render_current_view() -> None:
         current = active_page[0]
+        cur_width = page.width
         if current == "send":
             top_bar_container.content = create_top_bar(
                 state=state,
@@ -84,11 +87,13 @@ def main(page: ft.Page) -> None:
                 on_settings_click=go_settings,
                 on_back_click=go_home,
                 title="Send Files",
+                page_width=cur_width,
             )
             content_area.content = create_send_view(
                 state=state,
                 picker_component=file_picker_comp,
                 on_back_click=go_home,
+                page_width=cur_width,
             )
         elif current == "receive":
             top_bar_container.content = create_top_bar(
@@ -97,10 +102,12 @@ def main(page: ft.Page) -> None:
                 on_settings_click=go_settings,
                 on_back_click=go_home,
                 title="Receive Files",
+                page_width=cur_width,
             )
             content_area.content = create_receive_view(
                 state=state,
                 on_back_click=go_home,
+                page_width=cur_width,
             )
         elif current == "settings":
             top_bar_container.content = create_top_bar(
@@ -109,23 +116,27 @@ def main(page: ft.Page) -> None:
                 on_settings_click=go_home,
                 on_back_click=go_home,
                 title="Settings",
+                page_width=cur_width,
             )
             content_area.content = create_settings_view(
                 state=state,
                 folder_picker=folder_picker,
                 on_back_click=go_home,
+                page_width=cur_width,
             )
         else:
             top_bar_container.content = create_top_bar(
                 state=state,
                 on_scan_click=state.trigger_discovery,
                 on_settings_click=go_settings,
+                page_width=cur_width,
             )
             content_area.content = create_home_view(
                 state=state,
                 on_send_click=go_send,
                 on_receive_click=go_receive,
                 on_quick_send=switch_to_send_with_peer,
+                page_width=cur_width,
             )
 
     def handle_state_change() -> None:
@@ -135,17 +146,28 @@ def main(page: ft.Page) -> None:
         except Exception:
             pass
 
+    def handle_resize(_: Any = None) -> None:
+        render_current_view()
+        try:
+            page.update()
+        except Exception:
+            pass
+
+    page.on_resize = handle_resize
     state.add_listener(handle_state_change)
 
     render_current_view()
 
-    layout = ft.Column(
-        controls=[
-            top_bar_container,
-            content_area,
-        ],
+    layout = ft.SafeArea(
+        content=ft.Column(
+            controls=[
+                top_bar_container,
+                content_area,
+            ],
+            expand=True,
+            spacing=0,
+        ),
         expand=True,
-        spacing=0,
     )
 
     page.add(layout)

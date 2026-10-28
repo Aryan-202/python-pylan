@@ -30,6 +30,7 @@ def create_send_view(
     picker_component: FilePickerComponent,
     on_back_click: Optional[Callable[[], None]] = None,
     on_transfer_started: Optional[Callable[[], None]] = None,
+    page_width: Optional[float] = None,
 ) -> ft.Control:
     """Construct the Send Files view.
 
@@ -38,11 +39,13 @@ def create_send_view(
         picker_component: Shared FilePickerComponent instance.
         on_back_click: Optional callback to return to the home screen.
         on_transfer_started: Optional event handler on transfer dispatch.
+        page_width: Optional viewport width for responsive layout adjustments.
 
     Returns:
         A Flet Control rendering the file sending workspace.
     """
     _ = on_back_click
+    is_mobile = page_width is not None and page_width < 500
     manual_ip_field = ft.TextField(
         label="Or enter device address directly",
         hint_text="e.g. 192.168.1.50:44000",
@@ -143,7 +146,7 @@ def create_send_view(
             ],
             spacing=10,
         ),
-        padding=16,
+        padding=12 if is_mobile else 16,
         border_radius=12,
         bgcolor=ft.Colors.SURFACE_CONTAINER,
         border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
@@ -191,7 +194,7 @@ def create_send_view(
             recipient_card,
             transfers_section,
         ],
-        spacing=16,
-        padding=20,
+        spacing=12 if is_mobile else 16,
+        padding=12 if is_mobile else 20,
         expand=True,
     )

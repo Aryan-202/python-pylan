@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from datetime import datetime
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from pylan.core.models import (
@@ -264,6 +265,27 @@ class TestAppState(unittest.TestCase):
         self.assertIn(item_pending, self.state.transfers)
         self.assertNotIn(item_done, self.state.transfers)
         self.assertNotIn(item_failed, self.state.transfers)
+
+    def test_start_receiver_port_fallback(self) -> None:
+        """Verify fallback to alternate port when preferred port is in use."""
+        import asyncio
+
+        state = AppState()
+        mock_server = MagicMock()
+        calls: list[int] = []
+
+        async def fake_start_server(*args: Any, **kwargs: Any) -> Any:
+            p = kwargs.get("port", 0)
+            calls.append(p)
+            if p == 44000:
+                raise OSError("Port busy")
+            return mock_server
+
+        with patch("asyncio.start_server", side_effect=fake_start_server):
+            asyncio.run(state._start_receiver_coro())
+            self.assertTrue(state.is_receiver_running)
+            self.assertEqual(state.settings.tcp_port, 44001)
+            self.assertEqual(calls, [44000, 44001])
 
 
 class TestUIComponentRendering(unittest.TestCase):

@@ -14,12 +14,14 @@ from pylan.ui.state import AppState, TransferDirection, TransferStatus
 def create_receive_view(
     state: AppState,
     on_back_click: Optional[Callable[[], None]] = None,
+    page_width: Optional[float] = None,
 ) -> ft.Control:
     """Construct the Receive Transfers workspace view.
 
     Args:
         state: Reactive application state store.
         on_back_click: Optional callback to return to the home screen.
+        page_width: Optional viewport width for responsive layout adjustments.
 
     Returns:
         A Flet Control rendering the receiver status, approvals, and history.
@@ -28,6 +30,7 @@ def create_receive_view(
     download_dir = settings.download_dir
 
     _ = on_back_click
+    is_mobile = page_width is not None and page_width < 500
 
     def open_downloads_folder(_: Any = None) -> None:
         target = Path(download_dir)
@@ -111,7 +114,7 @@ def create_receive_view(
             ],
             spacing=12,
         ),
-        padding=16,
+        padding=12 if is_mobile else 16,
         border_radius=12,
         bgcolor=ft.Colors.SURFACE_CONTAINER,
         border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
@@ -240,7 +243,7 @@ def create_receive_view(
             pending_section,
             history_section,
         ],
-        spacing=16,
-        padding=20,
+        spacing=12 if is_mobile else 16,
+        padding=12 if is_mobile else 20,
         expand=True,
     )
